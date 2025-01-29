@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js"
 import {ApiError} from '../utils/ApiError.js'
 import {User} from '../models/user.model.js'
-import {uploadOnCloudinary} from '../utils/cloudinary.js'
+import {uploadOnCloudinary,deleteFromCloudinary} from '../utils/cloudinary.js'
 import {ApiResponse} from '../utils/ApiResponse.js'
 import jwt from 'jsonwebtoken'
 
@@ -283,11 +283,19 @@ const updateUserAvatar=asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Avatar file is required")
     }
 
+    //upload new avatar on cloudinary
     const avatar=await uploadOnCloudinary(avatarLocalPath)
 
     if(!avatar.url){
         throw new ApiError(400,"Error while uploading the avatar on cloudinary")
     }
+
+    //take old avatar url from db and delete it from cloudinary
+    const existingUser = await User.findById(req.user?._id).select("avatar");
+    // Store the old avatar URL
+    const oldAvatar = existingUser?.avatar;
+    const deleteResponse = await deleteFromCloudinary(oldAvatar);
+    console.log("deleteResponse: ",deleteResponse);
 
     const user=await User.findByIdAndUpdate(
         req.user?._id,
@@ -317,6 +325,13 @@ const updateUserCoverImage=asyncHandler(async(req,res)=>{
     if(!coverImage.url){
         throw new ApiError(400,"Error while uploading the coverImage on cloudinary")
     }
+
+    //take old coverImage url from db and delete it from cloudinary
+    const existingUser = await User.findById(req.user?._id).select("coverImage");
+    // Store the old coverImage URL
+    const oldCoverImage = existingUser?.coverImage;
+    const deleteResponse = await deleteFromCloudinary(oldCoverImage);
+    console.log("deleteResponse: ",deleteResponse);
 
     const user=await User.findByIdAndUpdate(
         req.user?._id,
