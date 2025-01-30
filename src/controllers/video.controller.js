@@ -1,5 +1,5 @@
 import {asyncHandler} from '../utils/asyncHandler.js';
-import {Video} from '../models/video.model';
+import {Video} from '../models/video.model.js';
 
 const getAllVideos= asyncHandler(async (req, res) => {
     //get all videos based on query,sort,paginate
