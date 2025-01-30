@@ -182,7 +182,7 @@ const logoutUser=asyncHandler(async (req,res)=>{
 
 const refreshAcessToken=asyncHandler(async(req,res)=>{
     const incomingRefreshToken=req.cookies.refreshToken || req.body.refreshToken;
-
+    //console.log("incomingRefreshToken: ",incomingRefreshToken);
     if(!incomingRefreshToken){
         throw new ApiError(401,"authorization reuiest")
     }
@@ -205,14 +205,14 @@ const refreshAcessToken=asyncHandler(async(req,res)=>{
          secure:true
      }
  
-     const {accessToken,newRefreshToken} =await generateAcessAndRefreshTokens(user._id)
+     const {accessToken,refreshToken} =await generateAcessAndRefreshTokens(user._id)
  
      return res
      .status(200)
      .cookie("accessToken",accessToken,options)
-     .cookie("refreshToken",newRefreshToken,options)
+     .cookie("refreshToken",refreshToken,options)
      .json(
-         new ApiResponse(200,{accessToken,newRefreshToken},"New access token generated")
+         new ApiResponse(200,{accessToken,refreshToken},"New access token generated")
      )
    } catch (error) {
        throw new ApiError(401, error?.message || "Invalid refresh token")
@@ -255,7 +255,7 @@ const getCurrentUser=asyncHandler(async(req,res)=>{
 const updateAccountDetails=asyncHandler(async(req,res)=>{
     const {fullName,email}=req.body;
 
-    if(!fullName || !email){
+    if(!(fullName || email)){
         throw new ApiError(400,"Full name and email are required")
     }
 
