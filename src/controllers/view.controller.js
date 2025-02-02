@@ -78,19 +78,19 @@ const getVideoViews=asyncHandler(async(req,res)=>{
 })
 
 const removeView=asyncHandler(async(req,res)=>{
-    try {
+    
         const {videoId} =req.params;
-        if(!isValidObjectId){
+        if(!isValidObjectId(videoId)){
             throw new ApiError(400,"Invalid Video Id")
         }
         const userId=req.user?._id;
         if(!userId){
             throw new ApiError(401,"user was not authenticate")
         }
-        const removeView= await View.findByIdAndDelete({
-            video:videoId,
-            viewer:userId
-        })
+        const removeView = await View.findOneAndDelete({
+            video: videoId,
+            viewer: userId
+        });        
         if(!removeView){
             return res.status(200).json(
                 new ApiResponse(200,null,"No view Found to remove")
@@ -112,10 +112,6 @@ const removeView=asyncHandler(async(req,res)=>{
         return res.status(200).json(
             new ApiResponse(200,removeView,"remove The View")
         )
-    } catch (error) {
-        console.log("Error in remove View :",error)
-        throw new ApiError(500,"Internal Server Error due to remove view")
-    }
 })
 
 export {
