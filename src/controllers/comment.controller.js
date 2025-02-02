@@ -7,51 +7,65 @@ import { Video } from "../models/video.model.js"
 
 const getVideoComments = asyncHandler(async (req, res) => {
     //TODO: get all comments for a video
-    const {videoId} = req.params
-    const {page = 3, limit = 5} = req.query
+    const {videoId} = req.params;
+    let {page = 1, limit = 5} = req.query;
 
-    const comment=await Comment.aggregate([
-        {
-            $match:{
-                video:new mongoose.Types.ObjectId(videoId)
-            }
-        },
-        {
-            $project:{
-                _id:0,
-                content:1
-            }
-        },
-        {
-            $skip:(page-1)*limit
-        },
-        {
-            $limit: parseInt(limit)
-        }
-    ])
-
-    const totalComment=await Comment.countDocuments({
-        video:videoId
-    });
-
-    if(!comment.length){
-        throw new ApiError(400,"No comment Found for this Video")
+    if(!isValidObjectId(videoId)){
+        throw new ApiError(400,"Invalid Video Id");
     }
-    const hasNextPage=page*limit <totalComment;
-    const hasPreviousPage=page >1;
+
+    page=Math.max(1,parseInt(page));
+    limit=Math.max(1,parseInt(limit));
+
+    const [comments,totalComments]=await Promise.all([
+        Comment.aggregate([
+            {
+                $match:{
+                    video:new mongoose.Types.ObjectId(videoId)
+                }
+            },
+            {
+                $sort:{
+                    createdAt:-1  //sort comment newly first
+                }
+            },
+            {
+                $skip:(page-1)*limit
+            },
+            {
+                $limit:limit
+            },
+            {
+                $project:{
+                    _id:1,
+                    content:1,
+                    createdAt:1,
+                    owner:1
+                }
+            }
+        ]),
+        Comment.countDocuments({video:videoId})
+    ]);
+
+    if(totalComments===0){
+        return res.status(200).json(
+            new ApiResponse(200,[],"No commnet found for this video")
+        )
+    }
+    const totalPages=Math.ceil(totalComments/limit);
+    const hasNextPage=page<totalPages;
+    const hasPreviousPage=page>1;
 
     return res.status(200).json(
-        new ApiResponse(
-            200,
-            {
-                totalComment,
-                currentPage: parseInt(page),
-                limit: parseInt(limit),
-                nextPage: hasNextPage ? parseInt(page) + 1 : null,
-                previousPage: hasPreviousPage ? parseInt(page) - 1 : null,
-                comment,
-            },
-            "Comments Fetched SuccessFully"
+        new ApiResponse(200,{
+            totalComments,
+            currentPage:page,
+            limit,
+            totalPages,
+            hasNextPage,
+            hasPreviousPage
+            ,comments
+        }, "Comments Fetched SuccesssFully"
         )
     )
 
@@ -105,7 +119,7 @@ const updateComment = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiResponse(200,updateComment,"Comment updated Succesfully")
+            new ApiResponse(200,{updateComment},"Comment updated Succesfully")
         )
 
 })

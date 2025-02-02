@@ -253,17 +253,17 @@ const getCurrentUser=asyncHandler(async(req,res)=>{
 })
 
 const updateAccountDetails=asyncHandler(async(req,res)=>{
-    const {fullName,email}=req.body;
+    const {username ,email}=req.body;
 
-    if(!(fullName || email)){
-        throw new ApiError(400,"Full name and email are required")
+    if(!(username || email)){
+        throw new ApiError(400,"username and email are required")
     }
 
     const user=await User.findByIdAndUpdate(
         req.user._id,
         {
             $set:{
-                fullName,
+                username,
                 email:email.toLowerCase()
             }
         },
