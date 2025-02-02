@@ -70,12 +70,12 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
 });
 
 const getPlaylistById=asyncHandler(async(req,res)=>{
-    const {playListId}=req.params;
-    if(!isValidObjectId(playListId)){
+    const {playlistId}=req.params;
+    if(!isValidObjectId(playlistId)){
         throw new ApiError(400,"Invalid playlist id")
     }
     try {
-        const playlist=await Playlist.findById(playListId)
+        const playlist=await Playlist.findById(playlistId)
             .populate({
                 path:"videos",
                 populate:{
@@ -105,7 +105,7 @@ const addVideoToPlaylist=asyncHandler(async(req,res)=>{
     if(!video){
         throw new ApiError(404,"Video not found")
     }
-    const playlist =await PlayList.findOne({
+    const playlist =await Playlist.findOne({
         _id:playlistId,
         videos:videoId
     });
@@ -115,7 +115,7 @@ const addVideoToPlaylist=asyncHandler(async(req,res)=>{
         )
     }
 
-    const updatePlaylist=await PlayList.findByIdAndUpdate(playlistId,
+    const updatePlaylist=await Playlist.findByIdAndUpdate(playlistId,
         {
             $addToSet:{
                 videos:video
@@ -138,13 +138,13 @@ const removeVideoFromPlaylist=asyncHandler(async(req,res)=>{
     if(!isValidObjectId(videoId) || !isValidObjectId(playlistId)){
         throw new ApiError(400,"Invalid PlayList or video ids")
     }
-    const updatePlaylist=await PlayList.findByIdAndUpdate(
+    const updatePlaylist=await Playlist.findByIdAndUpdate(
         {_id:playlistId,videos:videoId},
         { $pull :{ videos:new mongoose.Types.ObjectId(videoId) } },
         { new: true }
     );
 
-    const playlistExists=await PlayList.exists({ _id:playlistId});
+    const playlistExists=await Playlist.exists({ _id:playlistId});
     if(!playlistExists){
         throw new ApiError(404,"PlayList Not found")
     }
@@ -158,12 +158,11 @@ const removeVideoFromPlaylist=asyncHandler(async(req,res)=>{
 });
 
 const deletePlaylist=asyncHandler(async(req,res)=>{
-    try {
         const {playlistId}=req.params;
         if(!isValidObjectId(playlistId)){
             throw new ApiError(400,"Invalid Playlist Id")
         }
-        const deletePlayList=await PlayList.findByIdAndDelete(playlistId)
+        const deletePlayList=await Playlist.findByIdAndDelete(playlistId)
     
         if(!deletePlayList){
             throw new ApiError(500,"Internal Server Error")
@@ -171,9 +170,6 @@ const deletePlaylist=asyncHandler(async(req,res)=>{
         return res.status(200).json(
             new ApiResponse(200,deletePlayList,"PlayList Deleted SuccessFully")
         )
-    } catch (error) {
-        return new ApiError(500,"Internal Server Issue",error)
-    }
 });
 
 const updatePlaylist=asyncHandler(async(req,res)=>{
@@ -187,7 +183,7 @@ const updatePlaylist=asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Name are required")
     }
 
-    const updatePlaylist=await PlayList.findByIdAndUpdate(playlistId,
+    const updatePlaylist=await Playlist.findByIdAndUpdate(playlistId,
         {
             $set:{
                 name,
