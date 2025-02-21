@@ -9,28 +9,44 @@ const toggleVideoLike= asyncHandler(async (req, res) => {
     if(!isValidObjectId(videoId)){
         throw new ApiError(400,"Invalid video id");
     }
-    const likedeVideo=await Like.findOne({
-        video:videoId,
-        likedBy:req.user?._id
-    });
-    if(likedeVideo){
-        await Like.findByIdAndDelete(likedeVideo._id);
-        return res.status(200).json(
-            new ApiResponse(200,{},"Liked Remove SuccessFully")
-        )
-    }else{
-        const like=await Like.create({
-            video:videoId,
-            likedBy:req.user?._id
+
+    const userId=req.user?._id;
+
+    const ifLiked = await Like.exists({ video: new mongoose.Types.ObjectId(videoId), likedBy: userId })
+
+    if (!ifLiked) {
+        const like = await Like.create({
+            video: new mongoose.Types.ObjectId(videoId),
+            likedBy: userId
         })
-        if(!like){
-            throw new ApiError(500,"Something Went wrong while adding like")
+        if (!like) {
+            throw new ApiError(400, "Could not like")
         }
-        return res.status(200).json(
-            new ApiResponse(200,like || {},"Liked added SuccessFully")
-        )
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    ifLiked,
+                    "Video liked"
+                )
+            )
     }
-    
+    else {
+        const unlike = await Like.findByIdAndDelete(ifLiked._id)
+        if (!unlike) {
+            throw new ApiError(400, "Could not like")
+        }
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    ifLiked,
+                    "Video unliked"
+                )
+            )
+    }
 });
 
 const toggleCommentLike= asyncHandler(async (req, res) => {

@@ -22,7 +22,7 @@ const createTweet = asyncHandler(async (req, res) => {
     }
     return res
         .status(200)
-        .json(new ApiResponse(201, {tweet},"Tweet created successfully"));
+        .json(new ApiResponse(200, {tweet},"Tweet created successfully"));
 });
 
 const getUserTweets = asyncHandler(async (req, res) => {
@@ -65,7 +65,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, {tweets},"User tweets fetched successfully"));
+        .json(new ApiResponse(200, tweets[0],"User tweets fetched successfully"));
 });
 
 
@@ -94,7 +94,7 @@ const updateTweet = asyncHandler(async (req, res) => {
     }
     return res
         .status(200)
-        .json(new ApiResponse(200, {updatedTweet},"Tweet updated successfully"));
+        .json(new ApiResponse(200, updatedTweet,"Tweet updated successfully"));
 });
 
 const deleteTweet = asyncHandler(async (req, res) => {
@@ -109,7 +109,7 @@ const deleteTweet = asyncHandler(async (req, res) => {
         }
         res
             .status(200)
-            .json(new ApiResponse(200, {tweet},"Tweet deleted successfully"));
+            .json(new ApiResponse(200, {},"Tweet deleted successfully"));
     } catch (error) {
         throw new ApiError(500, "Internal Server error ",error.message);
     }

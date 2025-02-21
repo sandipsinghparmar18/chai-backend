@@ -3,9 +3,20 @@ import{ApiResponse} from '../utils/ApiResponse.js';
 import {asyncHandler} from '../utils/asyncHandler.js';
 
 const healthCheck = asyncHandler(async (req, res) => {
-    return res
-    .status(200)
-    .json(new ApiResponse(200, 'Server is up and running'));
+    const uptime = process.uptime();
+    const memoryUsage = process.memoryUsage();
+
+    return res.status(200).json(
+        new ApiResponse(200, { 
+            status: "healthy",
+            uptime: `${Math.floor(uptime)} seconds`,
+            memoryUsage: {
+                rss: memoryUsage.rss, // Resident Set Size
+                heapTotal: memoryUsage.heapTotal,
+                heapUsed: memoryUsage.heapUsed
+            }
+        }, "OK")
+    );
 });
 
 export { healthCheck };

@@ -119,13 +119,13 @@ const loginUser =asyncHandler( async (req,res)=>{
     })
 
     if(!user) {
-        throw new ApiError(404,"User does not find")
+        throw new ApiError(404, "User not found")
     }
 
     const isPasswordValid= await user.isPasswordCorrect(password)
 
     if(!isPasswordValid){
-        throw new ApiError(401,"Invalid user credenatial")
+        throw new ApiError(401, "Invalid username or password")
     }
 
     const {accessToken,refreshToken}= await generateAcessAndRefreshTokens(user._id)
@@ -146,7 +146,7 @@ const loginUser =asyncHandler( async (req,res)=>{
         new ApiResponse(
             200,
             {
-                user:loggedInUser,accessToken,refreshToken
+                loggedInUser,accessToken,refreshToken
             },
             "User logged in Succesfully"
         )
@@ -155,30 +155,28 @@ const loginUser =asyncHandler( async (req,res)=>{
 })
 
 
-const logoutUser=asyncHandler(async (req,res)=>{
-        await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $set:{
-                refreshToken:undefined
-            }
-        },
-        {
-            new:true
-        }
-    )
-    const options={
-        httpOnly:true,
-        secure:true
+const logoutUser = asyncHandler(async (req, res) => {
+    if (!req.user) {
+        return res.status(401).json(new ApiResponse(401, {}, "Unauthorized request"));
     }
+
+    await User.findByIdAndUpdate(req.user._id, {
+        $unset: { refreshToken: "" } // Properly remove refreshToken
+    });
+
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // Secure only in production
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+    };
+
     return res
-    .status(200)
-    .clearCookie("accessToken",options)
-    .clearCookie("refreshToken",options)
-    .json(
-        new ApiResponse(200,{}, "User logged out successfully")
-    )
-})
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User logged out successfully"));
+});
+
 
 const refreshAcessToken=asyncHandler(async(req,res)=>{
     const incomingRefreshToken=req.cookies.refreshToken || req.body.refreshToken;
@@ -409,8 +407,8 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
         }
     ])
 
-    if(!channel || channel?.length===0){
-        throw new ApiError(404,"Channel not found")
+    if (!channel?.length) {
+        throw new ApiError(404, "Channel does not exist");
     }
 
     return res

@@ -52,7 +52,8 @@ const getAllVideos= asyncHandler(async (req, res) => {
                     _id:1,
                     username:1,
                     fullName:1,
-                    email:1
+                    email:1,
+                    avatar:1
                 }
             }
         },
@@ -128,18 +129,19 @@ const publishVideo= asyncHandler(async (req, res) => {
     }
     return res
         .status(200)
-        .json(new ApiResponse(201,"Video created successfully",createdVideo));
+        .json(new ApiResponse(200,"Video created successfully",createdVideo));
 });
 
 const getVideoById= asyncHandler(async (req, res) => {
     //get video by id
+    //console.log(req.params);
     const {videoId} = req.params;
 
     if(!isValidObjectId(videoId)){
         throw new ApiError(400,"Invalid video id");
     }
 
-    const videoFile=await Video.findById(videoId).populate("owner","username fullName email");
+    const videoFile=await Video.findById(videoId).populate("owner","username fullName email avatar");
     if(!videoFile){
         throw new ApiError(404,"Video not found");
     }
@@ -234,7 +236,7 @@ const toglePublishStatus= asyncHandler(async (req, res) => {
     }
     return res
         .status(200)
-        .json(new ApiResponse(200,"Video publish status updated successfully",updatedVideo));
+        .json(new ApiResponse(200,"Video publish status updated successfully",updatedVideo.isPublished));
 });
 
 export {

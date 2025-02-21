@@ -55,15 +55,15 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
         }
     ]);
 
-    if (!userPlaylists || userPlaylists.length === 0) {
-        throw new ApiError(404, "No playlists found");
-    }
+    // if (!userPlaylists || userPlaylists.length === 0) {
+    //     throw new ApiError(404, "No playlists found");
+    // }
 
     // Respond with the populated playlists
     return res.status(200).json(
         new ApiResponse(
             200,
-            userPlaylists,
+            userPlaylists || {},
             "User playlists fetched successfully"
         )
     );
@@ -92,7 +92,7 @@ const getPlaylistById=asyncHandler(async(req,res)=>{
             new ApiResponse(200,playlist,"PlayList fatched Successfully")
         )
     } catch (error) {
-        
+        throw new ApiError(500, `Failed to fetch playlist: ${error.message}`);
     }
 });
 
