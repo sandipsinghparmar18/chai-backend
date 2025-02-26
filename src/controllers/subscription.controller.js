@@ -121,7 +121,19 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
 
 
     if (!channels.length) {
-        throw new ApiError(400, "Not subscribed to any channel");
+        return res.status(404).json(
+            new ApiResponse(
+                404,
+                "No channels found for this subscriber",
+                {
+                    totalChannels: 0,
+                    totalPages: 0,
+                    currentPage: page,
+                    hasNextPage: false,
+                    hasPreviousPage: false,
+                }
+            )
+        )
     }
 
     const channelIds = channels.map(channel => channel.channel);
@@ -139,7 +151,19 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         .limit(Number(limit)); // Limit the number of videos per page
 
     if (!videos.length) {
-        throw new ApiError(404, "No videos found from the subscribed channels");
+        return res.status(404).json(
+            new ApiResponse(
+                404,
+                "No videos found from the subscribed channels",
+                {
+                    totalVideos: 0,
+                    totalPages: 0,
+                    currentPage: page,
+                    hasNextPage: false,
+                    hasPreviousPage: false,
+                }
+            )
+        )
     }
 
     // Count total videos for pagination metadata
