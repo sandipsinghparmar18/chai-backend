@@ -24,33 +24,31 @@ const uploadOnCloudinary = async (localFilePath) => {
 
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
-      chunk_size: 6000000, // Recommended for large files
-      folder: "videos", // Organize files in Cloudinary
+      chunk_size: 6000000,
+      folder: "videos",
     });
 
-    console.log("File uploaded successfully:", response.secure_url);
+    console.log("File uploaded successfully:", response);
 
-    // Cleanup: Delete local file safely
+    if (!response || !response.secure_url) {
+      console.error("Invalid Cloudinary response:", response);
+      return null;
+    }
+
+    // Cleanup only in local environment
     if (!isProduction && fs.existsSync(localFilePath)) {
       fs.unlink(localFilePath, (err) => {
         if (err) console.error("Error deleting local file:", err);
       });
     }
 
-    return response;
+    return response; // Ensure this always returns a valid response object
   } catch (error) {
     console.error("Cloudinary Upload Error:", error);
-
-    // Cleanup local file safely in case of failure
-    if (!isProduction && fs.existsSync(localFilePath)) {
-      fs.unlink(localFilePath, (err) => {
-        if (err) console.error("Error deleting local file:", err);
-      });
-    }
-
     return null;
   }
-};  
+};
+  
 
 
 // Extract public ID from URL

@@ -115,10 +115,6 @@ const publishVideo = asyncHandler(async (req, res) => {
     try {
         video = await uploadOnCloudinary(videoLocalPath, "video");
         thumbnail = await uploadOnCloudinary(thumbnailLocalPath, "image");
-
-        // Delete local files after uploading
-        fs.unlinkSync(videoLocalPath);
-        fs.unlinkSync(thumbnailLocalPath);
     } catch (error) {
         throw new ApiError(500, "Error uploading video or thumbnail");
     }
