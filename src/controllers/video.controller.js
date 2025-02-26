@@ -91,46 +91,63 @@ const getAllVideos= asyncHandler(async (req, res) => {
         ));
 });
 
-const publishVideo= asyncHandler(async (req, res) => {
-    //get vedio,upload to cloudinary,create video in db
-    const {title,description}=req.body;
-    if(!title || !description){
-        throw new ApiError(400,"Title and description are required");
-    }
-    const videoLocalPath=req.files?.videoFile[0].path;
-    const thumbnailLocalPath=req.files?.thumbnail[0].path;
+const publishVideo = asyncHandler(async (req, res) => {
+    // Get video & upload to Cloudinary, then create a video in DB
+    const { title, description } = req.body;
 
-    if(!videoLocalPath || !thumbnailLocalPath){
-        throw new ApiError(400,"Video file and thumbnail are required");
-    }
-    const video=await uploadOnCloudinary(videoLocalPath);
-    const thumbnail=await uploadOnCloudinary(thumbnailLocalPath);
-
-    if(!video || !thumbnail){
-        throw new ApiError(500,"Error uploading video or thumbnail");
+    if (!title || !description) {
+        throw new ApiError(400, "Title and description are required");
     }
 
-    const user=await User.findById(req.user._id);
-    if(!user){
-        throw new ApiError(404,"User not found");
+    // Check if files exist
+    if (!req.files || !req.files.videoFile || !req.files.thumbnail) {
+        throw new ApiError(400, "Video file and thumbnail are required");
     }
 
-    const createdVideo= await Video.create({
+    const videoLocalPath = req.files.videoFile[0].path;
+    const thumbnailLocalPath = req.files.thumbnail[0].path;
+
+    // Upload to Cloudinary
+    let video, thumbnail;
+
+    try {
+        video = await uploadOnCloudinary(videoLocalPath, "video");
+        thumbnail = await uploadOnCloudinary(thumbnailLocalPath, "image");
+
+        // Delete local files after uploading
+        fs.unlinkSync(videoLocalPath);
+        fs.unlinkSync(thumbnailLocalPath);
+    } catch (error) {
+        throw new ApiError(500, "Error uploading video or thumbnail");
+    }
+
+    if (!video || !thumbnail) {
+        throw new ApiError(500, "Cloudinary upload failed");
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const createdVideo = await Video.create({
         title,
         description,
-        videoFile:video.url,
-        thumbnail:thumbnail.url,
-        duration:video.duration,
-        owner:req.user._id
-    })
+        videoFile: video.url,
+        thumbnail: thumbnail.url,
+        duration: video.duration,
+        owner: req.user._id
+    });
 
-    if(!createdVideo){
-        throw new ApiError(500,"Error creating video");
+    if (!createdVideo) {
+        throw new ApiError(500, "Error creating video");
     }
+
     return res
         .status(200)
-        .json(new ApiResponse(200,"Video created successfully",createdVideo));
+        .json(new ApiResponse(200, "Video created successfully", createdVideo));
 });
+
 
 const getVideoById= asyncHandler(async (req, res) => {
     //get video by id
