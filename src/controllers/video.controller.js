@@ -107,8 +107,8 @@ const publishVideo = asyncHandler(async (req, res) => {
     const videoLocalPath = req.files.videoFile[0].path;
     const thumbnailLocalPath = req.files.thumbnail[0].path;
 
-    console.log(`Uploading video`, videoLocalPath);
-    console.log(`Uploading thumbnail`, thumbnailLocalPath);
+    //console.log(`Uploading video`, videoLocalPath);
+    //console.log(`Uploading thumbnail`, thumbnailLocalPath);
     // Upload to Cloudinary
     let video, thumbnail;
 

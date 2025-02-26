@@ -20,12 +20,12 @@ const uploadOnCloudinary = async (localFilePath) => {
       return null;
     }
 
-    console.log("Uploading file:", localFilePath);
+    //console.log("Uploading file:", localFilePath);
 
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
       chunk_size: 6000000,
-      folder: "videos",
+      folder: "videoTubes",
     });
 
     console.log("File uploaded successfully:", response);
