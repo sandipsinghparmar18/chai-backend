@@ -17,14 +17,14 @@ cloudinary.config({
         return null;
       }
   
-      console.log("Uploading file:", localFilePath);
+      //console.log("Uploading file:", localFilePath);
   
       const response = await cloudinary.uploader.upload(localFilePath, {
         resource_type: "auto",
         chunk_size: 6000000, // Recommended for large files
       });
   
-      console.log("File uploaded successfully:", response.url);
+      //console.log("File uploaded successfully:", response.url);
   
       fs.unlinkSync(localFilePath); // Cleanup after upload
       return response;
