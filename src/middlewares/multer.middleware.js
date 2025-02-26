@@ -2,21 +2,20 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// Define temp directory for local storage
+const isProduction = process.env.NODE_ENV === "production";
 const tempDir = path.join(process.cwd(), "public/temp");
 
-// Ensure temp directory exists (for localhost)
-if (!fs.existsSync(tempDir)) {
+// Ensure `public/temp` exists in development
+if (!isProduction && !fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
 }
 
-// Multer Storage Configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, tempDir);
+    cb(null, isProduction ? "/tmp" : tempDir); // Use `/tmp` in production (ephemeral storage)
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
+    cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
   

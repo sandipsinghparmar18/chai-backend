@@ -1,5 +1,8 @@
 import {v2 as cloudinary} from 'cloudinary'
 import fs from "fs"
+import path from "path";
+
+const isProduction = process.env.NODE_ENV === "production";
 
           
 cloudinary.config({ 
@@ -22,20 +25,27 @@ const uploadOnCloudinary = async (localFilePath) => {
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
       chunk_size: 6000000, // Recommended for large files
+      folder: "videos", // Organize files in Cloudinary
     });
 
     console.log("File uploaded successfully:", response.secure_url);
 
-    // Cleanup: Delete local file after successful upload
-    fs.unlinkSync(localFilePath);
+    // Cleanup: Delete local file safely
+    if (!isProduction && fs.existsSync(localFilePath)) {
+      fs.unlink(localFilePath, (err) => {
+        if (err) console.error("Error deleting local file:", err);
+      });
+    }
 
     return response;
   } catch (error) {
     console.error("Cloudinary Upload Error:", error);
 
-    // Cleanup local file if upload fails
-    if (fs.existsSync(localFilePath)) {
-      fs.unlinkSync(localFilePath);
+    // Cleanup local file safely in case of failure
+    if (!isProduction && fs.existsSync(localFilePath)) {
+      fs.unlink(localFilePath, (err) => {
+        if (err) console.error("Error deleting local file:", err);
+      });
     }
 
     return null;
