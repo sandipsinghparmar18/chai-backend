@@ -9,22 +9,36 @@ cloudinary.config({
   secure: true
 });
 
-const uploadOnCloudinary=async(localFilePath)=>{
+
+  const uploadOnCloudinary = async (localFilePath) => {
     try {
-        if(!localFilePath) return null
-        //upload file on cloudinary
-        const response=await cloudinary.uploader.upload(localFilePath, {
-            resource_type:"auto"
-        })
-        //file has been uploaded successfull
-        //console.log("file is uploaded on cloudinary ",response.url)
-        fs.unlinkSync(localFilePath)
-        return response;
-    } catch (error) {
-        fs.unlinkSync(localFilePath) //remove the locally save temporiry file as upload operation as failed
+      if (!localFilePath || !fs.existsSync(localFilePath)) {
+        console.error("File does not exist:", localFilePath);
         return null;
+      }
+  
+      console.log("Uploading file:", localFilePath);
+  
+      const response = await cloudinary.uploader.upload(localFilePath, {
+        resource_type: "auto",
+        chunk_size: 6000000, // Recommended for large files
+      });
+  
+      console.log("File uploaded successfully:", response.url);
+  
+      fs.unlinkSync(localFilePath); // Cleanup after upload
+      return response;
+    } catch (error) {
+      console.error("Cloudinary Upload Error:", error);
+  
+      if (fs.existsSync(localFilePath)) {
+        fs.unlinkSync(localFilePath); // Cleanup in case of failure
+      }
+  
+      return null;
     }
-}
+  };  
+
 
 // Extract public ID from URL
 const getPublicIdFromUrl = (url) => {
